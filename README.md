@@ -1,5 +1,5 @@
-# How to tag image for AWS ECR
-- build image
+# How to build image
+- build
 ```
 $ cd api
 $ npm run build
