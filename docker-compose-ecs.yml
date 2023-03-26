@@ -1,0 +1,17 @@
+
+services:
+
+  api:
+    image: [aws-account].dkr.ecr.us-west-1.amazonaws.com/example-api:api
+    ports:
+      - 3000:3000
+    networks:
+      - frontend
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+
+networks:
+  frontend:
+

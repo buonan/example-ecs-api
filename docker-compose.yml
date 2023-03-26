@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+
+  api:
+    image: api
+    ports:
+      - 3000:3000
+    networks:
+      - frontend
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+
+networks:
+  frontend:
