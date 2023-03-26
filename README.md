@@ -5,10 +5,6 @@ $ cd api
 $ npm run build
 ```
 # How to create AWS ECR repository
-- login aws ecr
-```
-$ aws --profile hurricane ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin [aws-account].dkr.ecr.us-west-1.amazonaws.com
-```
 - create ecr repository
 ```
 $ aws --profile hurricane ecr create-repository \
@@ -16,6 +12,10 @@ $ aws --profile hurricane ecr create-repository \
   --region us-west-1 \
   --query 'repository.repositoryUri' \
   --output text
+```
+- login aws ecr
+```
+$ aws --profile hurricane ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin [aws-account].dkr.ecr.us-west-1.amazonaws.com
 ```
 # How to tag and upload
 ```
