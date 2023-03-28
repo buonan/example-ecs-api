@@ -2,7 +2,9 @@
 - build
 ```
 $ cd api
+$ docker context use default
 $ npm run build
+$ npm run image
 ```
 # How to create AWS ECR repository
 - create ecr repository
@@ -19,7 +21,7 @@ $ aws --profile hurricane ecr get-login-password --region us-west-1 | docker log
 ```
 # How to tag and upload
 ```
-$ docker tag fce3b3c01ec9 [aws-account].dkr.ecr.us-west-1.amazonaws.com/example-api:api
+$ docker tag 8e3428053fc4 [aws-account].dkr.ecr.us-west-1.amazonaws.com/example-api:api
 $ docker image push [aws-account].dkr.ecr.us-west-1.amazonaws.com/example-api:api
 ```
 # How to create ECS Cluster with Docker Compose
@@ -44,7 +46,16 @@ $ aws --profile hurricane elbv2 describe-load-balancers | jq -r '.LoadBalancers 
 $ docker compose \
   --project-name example-api \
   --file docker-compose-ecs.yml \
-  up --scale api=5
+  up --scale api=2
+```
+# How to update service new image
+```
+aws --profile hurricane ecs update-service --cluster example-api --service arn:aws:ecs:us-west-1:[aws-account]:service/example-api/example-api-ApiService-uRyeNbHc5O2F --force-new-deployment
+-or-
+docker compose \
+  --project-name example-api \
+  --file docker-compose-ecs.yml \
+  up --scale api=2
 ```
 # How to teardown ECS Cluster
 ```
@@ -53,3 +64,15 @@ $ docker compose \
   --file docker-compose-ecs.yml \
   down
 ```
+
+# Clean up volumes
+```
+$ aws --profile hurricane efs describe-file-systems | jq -r '.FileSystems | .[] | select(.Name=="example-api_mongo_db").FileSystemId'
+
+$ aws --profile hurricane efs delete-file-system \
+   --file-system-id fs-07784c20162abc134
+```
+
+# Troubleshooting
+- cannot be deleted while in status UPDATE_IN_PROGRESS
+see https://repost.aws/knowledge-center/ecs-service-stuck-update-status
