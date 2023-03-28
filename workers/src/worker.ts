@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 const kafka = require('./kafka')
 const sleep = require("./sleep");
 const pjson = require('../package.json');
+const health = require('./health');
 const mongo_root_username = 'root'
 const mongo_root_password = 'example'
 const mongo_admin = 'admin'
@@ -20,7 +21,6 @@ class Worker {
 
     private async initializeConnections() {
         console.log(`MONGO_INITDB_URL: ${this.db_url}`);
-        //mongoose.connect('mongodb://username:password@host:port/database?options...');
         await mongoose.connect(`${this.db_url}`, {
             authSource: mongo_admin,
             auth: {
@@ -28,7 +28,7 @@ class Worker {
                 password: mongo_root_password
             },
         }).then(() => {
-            console.log("Mongodb production connected!")
+            console.log("Mongodb connected!")
         }).catch((err: any) => {
             console.log(err)
         });
@@ -48,14 +48,16 @@ class Worker {
     }
 
     public run() {
+        console.log(`App version ${pjson.version}`);
+
         (async () => {
-            await this.consumer.subscribe({ topics: ['test'] });
+            await this.consumer.subscribe({ topics: ['health'] });
             this.consumer.run({
                 eachBatchAutoResolve: false,
                 eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale }: any) => {
                     for (let message of batch.messages) {
                         if (!isRunning() || isStale()) break
-                        console.log({
+                        health({
                             topic: batch.topic,
                             partition: batch.partition,
                             highWatermark: batch.highWatermark,
@@ -64,7 +66,7 @@ class Worker {
                                 value: message.value.toString(),
                                 headers: message.headers,
                             }
-                        })
+                        });
                         resolveOffset(message.offset)
                         await heartbeat()
                     }

@@ -29,7 +29,6 @@ class App {
 
     private async initializeConnections() {
         console.log(`MONGO_INITDB_URL: ${this.db_url}`);
-        //mongoose.connect('mongodb://username:password@host:port/database?options...');
         await mongoose.connect(`${this.db_url}`, {
             authSource: mongo_admin,
             auth: {
@@ -37,7 +36,7 @@ class App {
                 password: mongo_root_password
             },
         }).then(() => {
-            console.log("Mongodb production connected!")
+            console.log("Mongodb connected!")
         }).catch((err) => {
             console.log(err)
         });
@@ -73,7 +72,7 @@ class App {
         this.app.use('/test-kafka', async (req: express.Request, res: express.Response) => {
             res.setHeader('Content-Type', 'application/json');
             const topicMessage = {
-                topic: 'test',
+                topic: 'health',
                 messages: [{ value: JSON.stringify('Hello, kafkajs') }]
             }
             try {
