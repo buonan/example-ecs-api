@@ -42,7 +42,7 @@ class App {
             console.log(err)
         });
         let retry = 3;
-        while (retry > 0) {
+        while (retry > 0 && this.kafka_connected === false) {
             try {
                 await this.producer.connect();
                 this.kafka_connected = true;
@@ -53,6 +53,7 @@ class App {
             sleep(1);
             retry--;
         }
+        console.log('Kafka producer connected: ', this.kafka_connected);
     }
 
     private initializeControllers(controllers: any[]) {
@@ -90,6 +91,7 @@ class App {
 
     public listen() {
         this.server = this.app.listen(this.port, () => {
+            console.log(`App version ${pjson.version}`);
             console.log(`App listening on the port ${this.port}`);
         });
     }

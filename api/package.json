@@ -1,13 +1,13 @@
 {
   "name": "api",
-  "version": "1.0.0",
+  "version": "1.0.8",
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "compile": "npm version patch && tsc",
     "start": "node ./dist/index.js",
-    "image": "npm run build && docker build -t api ."
+    "build": "npm run compile && docker build -t api ."
   },
   "keywords": [],
   "author": "",
