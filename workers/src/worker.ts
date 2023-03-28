@@ -51,28 +51,31 @@ class Worker {
         console.log(`App version ${pjson.version}`);
 
         (async () => {
-            await this.consumer.subscribe({ topics: ['health'] });
+            await this.consumer.subscribe({ topics: [process.env.TOPIC] });
             this.consumer.run({
                 eachBatchAutoResolve: false,
                 eachBatch: async ({ batch, resolveOffset, heartbeat, isRunning, isStale }: any) => {
                     for (let message of batch.messages) {
                         if (!isRunning() || isStale()) break
-                        health({
-                            topic: batch.topic,
-                            partition: batch.partition,
-                            highWatermark: batch.highWatermark,
-                            message: {
-                                offset: message.offset,
-                                value: message.value.toString(),
-                                headers: message.headers,
-                            }
-                        });
+                        switch (process.env.TOPIC) {
+                            case 'health':
+                                health({
+                                    topic: batch.topic,
+                                    partition: batch.partition,
+                                    highWatermark: batch.highWatermark,
+                                    message: {
+                                        offset: message.offset,
+                                        value: message.value.toString(),
+                                        headers: message.headers,
+                                    }
+                                });
+                                break;
+                        }
                         resolveOffset(message.offset)
                         await heartbeat()
                     }
                 }
             })
-
         })();
     }
 }

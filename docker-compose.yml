@@ -17,10 +17,8 @@ services:
       - mongo
       - kafka
 
-  worker:
+  worker-health:
     image: worker
-    networks:
-      - backend
     deploy:
       replicas: 1
       update_config:
@@ -28,6 +26,10 @@ services:
     depends_on:
       - mongo
       - kafka
+    environment:
+      TOPIC: health
+    networks:
+      - backend
 
   mongo:
     image: mongo:latest
