@@ -17,14 +17,12 @@ services:
         parallelism: 1
       x-aws-autoscaling:
         min: 1
-        max: 10 #required
+        max: 5 #required
         cpu: 75
         # mem: - mutualy exlusive with cpu
 
-  worker:
+  worker-health:
     image: [aws-account].dkr.ecr.us-west-1.amazonaws.com/example-api:worker
-    networks:
-      - backend
     deploy:
       replicas: 1
       update_config:
@@ -32,6 +30,10 @@ services:
     depends_on:
       - mongo
       - kafka
+    environment:
+      TOPIC: health
+    networks:
+      - backend
 
   mongo:
     image: mongo:latest
@@ -41,6 +43,19 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - mongo_db:/data/db
+    networks:
+      - backend
+
+  mongo-express:
+    image: mongo-express:latest
+    restart: always
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
     networks:
       - backend
 
@@ -71,8 +86,6 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
-      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
-      KAFKA_LOG4J_LOGGERS: 'kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO'
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
