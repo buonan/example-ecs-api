@@ -1,12 +1,14 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import * as http from 'http';
-const kafka = require('./kafka')
+
+const crypto = require('crypto');
+const kafka = require('./kafka');
 const sleep = require("./sleep");
 const pjson = require('../package.json');
-const mongo_root_username = 'root'
-const mongo_root_password = 'example'
-const mongo_admin = 'admin'
+const mongo_root_username = 'root';
+const mongo_root_password = 'example';
+const mongo_admin = 'admin';
 
 class App {
     public app: express.Application;
@@ -73,7 +75,7 @@ class App {
             res.setHeader('Content-Type', 'application/json');
             const topicMessage = {
                 topic: 'health',
-                messages: [{ value: JSON.stringify('Hello, kafkajs') }]
+                messages: [{ action: '', value: JSON.stringify('Hello, kafkajs') }]
             }
             try {
                 if (this.kafka_connected) {
@@ -85,6 +87,24 @@ class App {
                 console.log(`test-kafka ${e}`);
             }
             res.end(JSON.stringify({ kafka: true }));
+        });
+        this.app.use('/test-writer', async (req: express.Request, res: express.Response) => {
+            let uuid = crypto.randomUUID();
+            res.setHeader('Content-Type', 'application/json');
+            const topicMessage = {
+                topic: 'writer',
+                messages: [{ action: 'write', value: JSON.stringify(`Write ${uuid} MongoDB`) }]
+            }
+            try {
+                if (this.kafka_connected) {
+                    await this.producer?.send(topicMessage);
+                } else {
+                    throw new Error('Product not connected!');
+                }
+            } catch (e) {
+                console.log(`test-writer ${e}`);
+            }
+            res.end(JSON.stringify({ writer: true }));
         });
     }
 

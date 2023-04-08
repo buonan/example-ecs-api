@@ -3,16 +3,18 @@ const kafka = require('./kafka')
 const sleep = require("./sleep");
 const pjson = require('../package.json');
 const health = require('./health');
+const writer = require('./writer');
 const mongo_root_username = 'root'
 const mongo_root_password = 'example'
 const mongo_admin = 'admin'
 
 class Worker {
     private db_url = `mongodb://mongo:27017`;
-    private consumer = kafka.consumer({ groupId: 'test-group' });
+    private consumer: any
     private kafka_connected = false;
 
-    constructor() {
+    constructor(groupId: any) {
+        this.consumer = kafka.consumer({ groupId: groupId });
     }
 
     async init() {
@@ -60,6 +62,18 @@ class Worker {
                         switch (process.env.TOPIC) {
                             case 'health':
                                 health({
+                                    topic: batch.topic,
+                                    partition: batch.partition,
+                                    highWatermark: batch.highWatermark,
+                                    message: {
+                                        offset: message.offset,
+                                        value: message.value.toString(),
+                                        headers: message.headers,
+                                    }
+                                });
+                                break;
+                            case 'writer':
+                                writer({
                                     topic: batch.topic,
                                     partition: batch.partition,
                                     highWatermark: batch.highWatermark,

@@ -10,7 +10,8 @@ module.exports = ({
         highWatermark: highWatermark,
         message: {
             offset: message.offset,
-            value: message.value.toString(),
+            action: message.action,
+            value: message.value,
             headers: message.headers,
         }
     })
