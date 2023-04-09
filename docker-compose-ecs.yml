@@ -10,7 +10,11 @@ services:
       - backend
     depends_on:
       - mongo
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
+    environment:
+      KAFKA_BROKERS: kafka1:9092,kafka2:9092,kafka3:9092
     deploy:
       replicas: 1
       update_config:
@@ -29,9 +33,29 @@ services:
         parallelism: 1
     depends_on:
       - mongo
-      - kafka
+      - kafka1
+      - kafka2
+      - kafka3
     environment:
       TOPIC: health
+      KAFKA_BROKERS: kafka1:9092,kafka2:9092,kafka3:9092
+    networks:
+      - backend
+
+  worker-writer:
+    image: [aws-account].dkr.ecr.us-west-1.amazonaws.com/example-api:worker
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+    depends_on:
+      - mongo
+      - kafka1
+      - kafka2
+      - kafka3
+    environment:
+      TOPIC: writer
+      KAFKA_BROKERS: kafka1:9092,kafka2:9092,kafka3:9092
     networks:
       - backend
 
@@ -71,7 +95,7 @@ services:
     networks:
       - backend
 
-  kafka:
+  kafka1:
     image: confluentinc/cp-kafka:latest
     user: root
     depends_on:
@@ -81,15 +105,68 @@ services:
       KAFKA_HEAP_OPTS: '-Xmx256M -Xms128M'
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 5
     volumes:
-      - kafka_data:/var/lib/kafka/data
+      - kafka1_data:/var/lib/kafka/data
     networks:
       - backend
+
+  kafka2:
+    image: confluentinc/cp-kafka:latest
+    user: root
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_HEAP_OPTS: '-Xmx256M -Xms128M'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 5
+    volumes:
+      - kafka2_data:/var/lib/kafka/data
+    networks:
+      - backend
+
+  kafka3:
+    image: confluentinc/cp-kafka:latest
+    user: root
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_HEAP_OPTS: '-Xmx256M -Xms128M'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka3:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 5
+    volumes:
+      - kafka3_data:/var/lib/kafka/data
+    networks:
+      - backend
+
+  kafka-manager:
+      image: hlebalbau/kafka-manager:latest
+      depends_on:
+        - kafka1
+        - kafka2
+        - kafka3
+        - zookeeper
+      environment:
+        - ZK_HOSTS=zookeeper:2181
+        - APPLICATION_SECRET=letmein
+      networks:
+        - backend
 
 networks:
   frontend:
@@ -97,7 +174,10 @@ networks:
 
 volumes:
   mongo_db:
-  kafka_data:
   zookeeper_data:
   zookeeper_log:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:
+
 

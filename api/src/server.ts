@@ -81,7 +81,7 @@ class App {
                 if (this.kafka_connected) {
                     await this.producer?.send(topicMessage);
                 } else {
-                    throw new Error('Product not connected!');
+                    throw new Error('Producer not connected!');
                 }
             } catch (e) {
                 console.log(`test-kafka ${e}`);
@@ -99,7 +99,7 @@ class App {
                 if (this.kafka_connected) {
                     await this.producer?.send(topicMessage);
                 } else {
-                    throw new Error('Product not connected!');
+                    throw new Error('Producer not connected!');
                 }
             } catch (e) {
                 console.log(`test-writer ${e}`);
